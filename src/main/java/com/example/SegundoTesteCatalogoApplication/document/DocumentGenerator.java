@@ -18,36 +18,22 @@ import java.io.FileOutputStream;
 @Service
 public class DocumentGenerator {
 
-    public String htmlToPdf(String processedHtml) {
+    public byte[] htmlToPdf(String processedHtml) {
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-        try{
+        try {
             PdfWriter pdfWriter = new PdfWriter(byteArrayOutputStream);
-
             DefaultFontProvider defaultFont = new DefaultFontProvider(false, true, false);
-
             ConverterProperties converterProperties = new ConverterProperties();
-
             converterProperties.setFontProvider(defaultFont);
 
             HtmlConverter.convertToPdf(processedHtml, pdfWriter, converterProperties);
 
-            FileOutputStream fount = new FileOutputStream("/Users/matheusruegg/Desktop/employee.pdf");
+            return byteArrayOutputStream.toByteArray(); // Return the PDF as a byte array
 
-            byteArrayOutputStream.writeTo(fount);
-            byteArrayOutputStream.close();
-
-            byteArrayOutputStream.flush();
-            fount.close();
-
-            return null;
-
-
-
-        }catch (Exception ex){
-            //exception occured
-
+        } catch (Exception ex) {
+            ex.printStackTrace();
         }
 
-        return null;
+        return null; // Return null in case of error
     }
 }

@@ -9,12 +9,14 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 import org.thymeleaf.spring6.SpringTemplateEngine;
 import org.thymeleaf.context.Context;
-import org.thymeleaf.spring6.SpringTemplateEngine;
+
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 
 
 @RestController
 public class DemoDocument {
-
 
     @Autowired
     private DocumentGenerator documentGenerator;
@@ -25,17 +27,26 @@ public class DemoDocument {
     @Autowired
     private DataMapper dataMapper;
 
-    @PostMapping(value="/generate/document")
-    public String generateDocument(@RequestBody List<Employee> employeeList) {
-        String finalHtml = null;
-
+    @PostMapping(value = "/generate/document", produces = "application/pdf")
+    public ResponseEntity<byte[]> generateDocument(@RequestBody List<Employee> employeeList) {
+        // Step 1: Convert employee data into a Thymeleaf template
         Context dataContext = dataMapper.setData(employeeList);
-        finalHtml = springTemplateEngine.process("template", dataContext);
+        String finalHtml = springTemplateEngine.process("template", dataContext);
 
-        documentGenerator.htmlToPdf(finalHtml);
+        // Step 2: Convert HTML to PDF and get the PDF bytes
+        byte[] pdfBytes = documentGenerator.htmlToPdf(finalHtml);
 
-        return "Success";
+        // Step 3: Return the PDF as an HTTP response
+        if (pdfBytes == null) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+        }
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("Content-Disposition", "attachment; filename=employee.pdf");
+        headers.add("Content-Type", "application/pdf");
+
+        return ResponseEntity.ok()
+                .headers(headers)
+                .body(pdfBytes);
     }
-
-
 }
